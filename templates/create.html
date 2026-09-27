@@ -1,99 +1,126 @@
-{% extends 'base.html' %} {% block content %}
-<article>
-  <h1 id="tip" class="tip">{{ tip }}</h1>
-  <form
-    mix-post="/api-create-recipe"
-    enctype="multipart/form-data"
-    id="create_post"
-    class="create-recipe"
-  >
-    <legend>Create a new recipe</legend>
-    <div class="field-group">
-      <!-- Main info -->
-      <div class="field">
-        <label for="recipe_title">Title</label>
-        <input name="recipe_title" id="recipe_title" type="text" />
-      </div>
-      <div class="field">
-        <label for="recipe_prep_time">Prep Time</label>
-        <input name="recipe_prep_time" id="recipe_prep_time" type="number" />
-      </div>
-      <div class="field">
-        <label for="recipe_cook_time">Cook Time</label>
-        <input name="recipe_cook_time" id="recipe_cook_time" type="number" />
-      </div>
-      <div class="field">
-        <label for="recipe_servings">Servings</label>
-        <input name="recipe_servings" id="recipe_servings" type="number" />
-      </div>
+{% extends 'base.html' %}
+{% from 'macros.html' import field, stepper, ingridient_row, instruction_row %}
+
+{% block title %}Create a recipe · Foodhead{% endblock title %}
+
+{% block content %}
+<div class="create">
+  <header class="create-header">
+    <img class="create-header__mascot" src="{{ url_for('static', filename='imgs/foodhead-logo.png') }}"
+         alt="" width="252" height="273" />
+    <div class="create-header__text">
+      <p class="sticker">New recipe</p>
+      <h1 id="create-heading">What's cooking?</h1>
+      <p class="page-lead">Share your recipe with the other foodheads. It only takes five small steps.</p>
     </div>
+  </header>
 
-    <!-- Upload Image -->
-    <!-- Photo Upload Field -->
-    <div class="field upload-file">
-      <label for="recipe_img" style="display: none">Photo</label>
+  <form class="recipe-form" mix-post="{{ url_for('api_create_recipe') }}" enctype="multipart/form-data"
+        novalidate aria-labelledby="create-heading">
 
-      <div
-        id="drop-zone"
-        onclick="document.getElementById('recipe_img').click()"
-        ondragover="handleDragOver(event)"
-        ondragleave="handleDragLeave(event)"
-        ondrop="handleDrop(event)"
-      >
-        <div class="upload-icon">
-          <img alt="upload-icon-img" src="/static/imgs/upload-img.png" />
-        </div>
+    {# ---------- 1. Basics ---------- #}
+    <fieldset class="form-card">
+      <legend class="form-card__title"><span class="form-card__number" aria-hidden="true">1</span>The basics</legend>
+      <p class="form-card__intro">Give it a name people will crave.</p>
 
-        <div id="upload-text">
-          <p>Drop your photo here</p>
-          <p>or click to browse · PNG, JPG, WebP</p>
-        </div>
+      {{ field("recipe_title", "Title",
+               hint=rules.RECIPE_TITLE_MIN ~ "–" ~ rules.RECIPE_TITLE_MAX ~ " characters",
+               validate=rules.REGEX_RECIPE_TITLE, maxlength=rules.RECIPE_TITLE_MAX,
+               placeholder="Grandma's lasagna") }}
+
+      <div class="field">
+        <label for="recipe_description">Description</label>
+        <textarea id="recipe_description" name="recipe_description" rows="4" required
+                  minlength="{{ rules.RECIPE_DESCRIPTION_MIN }}" maxlength="{{ rules.RECIPE_DESCRIPTION_MAX }}"
+                  placeholder="What makes this dish special?"
+                  data-counter="recipe_description-count"
+                  aria-describedby="recipe_description-hint recipe_description-error"></textarea>
+        <p id="recipe_description-hint" class="field-hint field-hint--split">
+          <span>At least {{ rules.RECIPE_DESCRIPTION_MIN }} characters</span>
+          <span><span id="recipe_description-count">0</span> / {{ rules.RECIPE_DESCRIPTION_MAX }}</span>
+        </p>
+        <p id="recipe_description-error" class="field-error"></p>
       </div>
+    </fieldset>
 
-      <input
-        id="recipe_img"
-        class="upload-img"
-        name="recipe_file"
-        type="file"
-        accept="image/png, image/jpeg, image/webp"
-        style="display: none"
-        onchange="handleFile(this.files[0])"
-      />
-    </div>
+    {# ---------- 2. Time and servings ---------- #}
+    <fieldset class="form-card">
+      <legend class="form-card__title"><span class="form-card__number" aria-hidden="true">2</span>Time &amp; servings</legend>
+      <p class="form-card__intro">How long does it take, and how many does it feed?</p>
 
-    <!-- Description -->
-    <div class="field-group">
-      <label for="recipe_description">Description</label>
-      <textarea
-        name="recipe_description"
-        id="recipe_description"
-        rows="4"
-      ></textarea>
-    </div>
+      <div class="stepper-grid">
+        {{ stepper("recipe_prep_time", "Prep time", 15, rules.RECIPE_MINUTES_MIN, rules.RECIPE_MINUTES_MAX,
+                   step=5, unit="min", hint="Minutes") }}
+        {{ stepper("recipe_cook_time", "Cook time", 30, rules.RECIPE_MINUTES_MIN, rules.RECIPE_MINUTES_MAX,
+                   step=5, unit="min", hint="Minutes") }}
+        {{ stepper("recipe_servings", "Servings", 2, rules.RECIPE_SERVINGS_MIN, rules.RECIPE_SERVINGS_MAX,
+                   hint=rules.RECIPE_SERVINGS_MIN ~ "–" ~ rules.RECIPE_SERVINGS_MAX ~ " people") }}
+      </div>
+    </fieldset>
 
-    <!-- Ingredients -->
-    <div class="field-group">
-      <h2>Ingredients</h2>
-      <ul id="ingridients-container"></ul>
-      <button class="add-btn" type="button" onclick="addingridient()">
-        <img alt="plus-sign" src="/static/icons/add_icon.svg" />
+    {# ---------- 3. Photo ---------- #}
+    <fieldset class="form-card">
+      <legend class="form-card__title"><span class="form-card__number" aria-hidden="true">3</span>Say cheese</legend>
+      <p class="form-card__intro">A photo of the finished dish makes people hungry.</p>
+
+      <div class="field photo-field">
+        {# The real input stays focusable (visually hidden, not display:none). The label is the drop zone #}
+        <input id="recipe_img" name="recipe_file" type="file" class="visually-hidden" required
+               accept="image/png, image/jpeg, image/webp"
+               data-preview="recipe_img-preview"
+               aria-describedby="recipe_img-name recipe_img-error" />
+        <label for="recipe_img" class="polaroid">
+          <span class="polaroid__photo">
+            <img id="recipe_img-preview" class="polaroid__preview" alt="" hidden />
+            <img class="polaroid__placeholder" src="{{ url_for('static', filename='imgs/upload-img.png') }}"
+                 alt="" width="200" height="200" />
+          </span>
+          <span class="polaroid__caption">Drop your photo here or <span class="polaroid__link">browse</span></span>
+          <span class="polaroid__hint">PNG, JPG or WebP · max {{ rules.IMAGE_MAX_MB }} MB</span>
+        </label>
+        <p id="recipe_img-name" class="field-hint" aria-live="polite"></p>
+        <p id="recipe_img-error" class="field-error"></p>
+      </div>
+    </fieldset>
+
+    {# ---------- 4. Ingredients ---------- #}
+    <fieldset class="form-card" aria-describedby="ingridients-error">
+      <legend class="form-card__title"><span class="form-card__number" aria-hidden="true">4</span>Ingredients</legend>
+      <p class="form-card__intro">One ingredient per row. Leave the unit empty for things like “2 eggs”.</p>
+
+      <ul id="ingridients" class="row-list" role="list">
+        {{ ingridient_row() }}
+      </ul>
+      <p id="ingridients-error" class="field-error"></p>
+      <button type="button" class="add-row-btn" data-list="ingridients" data-template="ingridient-template"
+              onclick="addRow(this)">
+        <img src="{{ url_for('static', filename='icons/add_icon.svg') }}" alt="" width="24" height="24" />
+        Add ingredient
       </button>
-    </div>
+      <template id="ingridient-template">{{ ingridient_row() }}</template>
+    </fieldset>
 
-    <!-- Instructions -->
-    <div class="field-group">
-      <h2>Instructions</h2>
-      <ol id="instructions-container"></ol>
-      <button class="add-btn" type="button" class="btn-add" onclick="addStep()">
-        <img alt="plus-sign" src="/static/icons/add_icon.svg" />
+    {# ---------- 5. Steps ---------- #}
+    <fieldset class="form-card" aria-describedby="instructions-error">
+      <legend class="form-card__title"><span class="form-card__number" aria-hidden="true">5</span>Steps</legend>
+      <p class="form-card__intro">Drag a step, or use the arrows, to change the order.</p>
+
+      <ol id="instructions" class="row-list row-list--steps" role="list">
+        {{ instruction_row() }}
+      </ol>
+      <p id="instructions-error" class="field-error"></p>
+      <button type="button" class="add-row-btn" data-list="instructions" data-template="instruction-template"
+              onclick="addRow(this)">
+        <img src="{{ url_for('static', filename='icons/add_icon.svg') }}" alt="" width="24" height="24" />
+        Add step
       </button>
+      <template id="instruction-template">{{ instruction_row() }}</template>
+    </fieldset>
+
+    <div class="form-submit">
+      <p class="form-submit__note">You can edit your recipe after sharing it.</p>
+      <button class="primary-btn form-submit__btn" mix-await="Sharing…" mix-done="Share recipe">Share recipe</button>
     </div>
-
-
-
-
-
-    <button class="primary-btn">Share Recipe</button>
   </form>
-</article>
+</div>
 {% endblock content %}

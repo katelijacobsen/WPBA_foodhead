@@ -1,123 +1,195 @@
 "use strict";
+const FORM_CONTROLS = "input, select, textarea";
 
-const instructionsList = document.querySelector<HTMLOListElement>(
-  "#instructions-container",
-);
-const ingridientsList = document.querySelector<HTMLUListElement>(
-  "#ingridients-container",
-);
+// Called by the server through mixhtml
+// Top-level functions in a normal script end up on window, which is where mixhtml looks for them.
 
-function addingridientHTML(): string {
-  return `
-    <li class="ingridient-item">
-      <div>
-        <label for="recipe_ingridient"></label>
-        <input
-          type="text"
-          name="recipe_ingridient"
-          placeholder="e.g. butter"
-        />
-        <input type="text" name="ingridient_amount" placeholder="e.g. 170" />
-        <select name="recipe_ingridient_unit">
-          <option value="">unit</option>
-          <option>g</option>
-          <option>kg</option>
-          <option>ml</option>
-          <option>L</option>
-          <option>pinch</option>
-          <option>tsp</option>
-          <option>tbsp</option>
-        </select>
-        <button type="button" onclick="rmvingridient(this)"><img alt="plus-sign" src="/static/icons/delete_icon.svg"/></button>
-      </div>
-    </li>
-  `;
+function markInvalid(fieldId: string): void {
+  const element = document.getElementById(fieldId.trim());
+  if (!element) return;
+  // A group (ingredients, instructions) points to its first control
+  const control = element.matches(FORM_CONTROLS)
+    ? element
+    : element.querySelector<HTMLElement>(FORM_CONTROLS);
+  control?.setAttribute("aria-invalid", "true");
+  control?.focus();
 }
 
-function createStepHTML(): string {
-  return `
-    <div class="drag-wrapper">
-      <div id="instruction-step" class="drag-tool" aria-label="drag & drop">
-        <img  class="drag-icon" alt="six dots that make it look dragable" src="/static/icons/drag_icon.svg"/>
-        <label class="step-label" style="display: none;"></label>
-        <textarea
-        name="instruction"
-        placeholder="Add Instruction here..."
-        ></textarea>
-      </div>
-      <div class="step-actions">
-        <button type="button" class="btn-rmv" onclick="rmvStep(this)">
-          <img alt="plus-sign" src="/static/icons/delete_icon.svg" />
-        </button>
-      </div>
-    </div>
-  `;
+function focusElement(id: string): void {
+  const element = document.getElementById(id.trim());
+  if (!element) return;
+  if (!element.hasAttribute("tabindex")) element.setAttribute("tabindex", "-1");
+  element.focus();
 }
 
-
-function addingridient(): void {
-  const li = document.createElement("li");
-  li.innerHTML = addingridientHTML();
-  ingridientsList?.appendChild(li);
+function closeDialog(id: string): void {
+  (document.getElementById(id.trim()) as HTMLDialogElement | null)?.close();
 }
 
+// Screen reader announcements 
 
-function rmvingridient(btn: HTMLButtonElement): void {
-  if (ingridientsList && ingridientsList.children.length > 1) {
-    btn.closest(".ingridient-item")?.remove();
+function announce(message: string): void {
+  const announcer = document.getElementById("announcer");
+  if (!announcer) return;
+  announcer.textContent = "";
+  // Clearing first, then setting after a moment, makes the same message announce again
+  setTimeout(() => (announcer.textContent = message), 50);
+}
+
+// Validation feedback 
+
+// mix-validate only adds the .mix-error class. Mirror it to aria-invalid and focus the first failing field.
+new MutationObserver((mutations) => {
+  let firstInvalid: HTMLElement | null = null;
+  for (const { target } of mutations) {
+    const field = target as HTMLElement;
+    if (!field.hasAttribute("mix-validate")) continue;
+    const invalid = field.classList.contains("mix-error");
+    field.setAttribute("aria-invalid", String(invalid));
+    if (invalid && !firstInvalid) firstInvalid = field;
   }
+  firstInvalid?.focus();
+}).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
+
+// Clear a field's error as soon as the user starts fixing it
+document.addEventListener("input", (event) => {
+  const field = event.target as HTMLElement;
+  if (field.getAttribute("aria-invalid") !== "true") return;
+  field.removeAttribute("aria-invalid");
+  field.classList.remove("mix-error");
+  const errorId = field.id
+    ? `${field.id}-error`
+    : field.closest("fieldset")?.getAttribute("aria-describedby");
+  const error = errorId ? document.getElementById(errorId) : null;
+  if (error) error.textContent = "";
+});
+
+// Number stepper
+
+function stepNumber(inputId: string, direction: -1 | 1): void {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  if (!input) return;
+  // stepUp/stepDown respect the input's own min, max and step
+  if (direction === 1) input.stepUp();
+  else input.stepDown();
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  const label = input.labels?.[0]?.textContent?.trim() ?? "";
+  announce(`${label} ${input.value}`);
 }
 
-function addStep(): void {
-  const row = document.createElement("li");
-  row.draggable = true;
-  row.className = "step-no";
-  row.innerHTML = createStepHTML();
+// Character counter
 
-  instructionsList?.appendChild(row);
-  row.querySelector("textarea")?.focus();
+document.addEventListener("input", (event) => {
+  const field = event.target as HTMLTextAreaElement;
+  const counterId = field.dataset?.counter;
+  if (!counterId) return;
+  const counter = document.getElementById(counterId);
+  if (counter) counter.textContent = String(field.value.length);
+});
+
+// Ingredient and step rows
+// Rows are looked up when a button is clicked, so this also works in forms loaded later by mix-get
+
+function addRow(button: HTMLButtonElement): void {
+  const list = document.getElementById(button.dataset.list ?? "");
+  const template = document.getElementById(button.dataset.template ?? "") as HTMLTemplateElement | null;
+  const row = template?.content.firstElementChild?.cloneNode(true) as HTMLElement | undefined;
+  if (!list || !row) return;
+  list.appendChild(row);
+  row.querySelector<HTMLElement>(FORM_CONTROLS)?.focus();
 }
 
-function rmvStep(btn: HTMLButtonElement): void {
-  if (instructionsList && instructionsList.children.length > 1) {
-    btn.closest(".step-no")?.remove();
+function removeRow(button: HTMLButtonElement): void {
+  const row = button.closest("li");
+  const list = row?.parentElement;
+  if (!row || !list || list.children.length <= 1) return; // keep at least one row
+  const next = row.nextElementSibling ?? row.previousElementSibling;
+  row.remove();
+  // Move focus to a neighbouring row so keyboard users don't end up at the top of the page
+  next?.querySelector<HTMLElement>(FORM_CONTROLS)?.focus();
+  announce("Removed");
+}
+
+function moveRow(button: HTMLButtonElement, direction: -1 | 1): void {
+  const row = button.closest("li");
+  const list = row?.parentElement;
+  const sibling = direction === -1 ? row?.previousElementSibling : row?.nextElementSibling;
+  if (!row || !list || !sibling) return;
+  if (direction === -1) sibling.before(row);
+  else sibling.after(row);
+  button.focus();
+  const position = Array.from(list.children).indexOf(row) + 1;
+  announce(`Moved to step ${position} of ${list.children.length}`);
+}
+
+// Drag and drop
+
+document.addEventListener("dragstart", (event) => {
+  const row = (event.target as HTMLElement).closest<HTMLElement>(".step-entry");
+  if (!row) return;
+  row.classList.add("is-dragging");
+  event.dataTransfer?.setData("text/plain", "");
+});
+
+document.addEventListener("dragend", () => {
+  document.querySelector(".is-dragging")?.classList.remove("is-dragging");
+});
+
+document.addEventListener("dragover", (event) => {
+  const target = event.target as HTMLElement;
+
+  const zone = target.closest<HTMLElement>(".polaroid");
+  if (zone) {
+    event.preventDefault();
+    zone.classList.add("is-dragover");
+    return;
   }
-}
 
-// Drag & drop
-function initDragDrop(): void {
-  instructionsList?.addEventListener("dragstart", (e: DragEvent) => {
-    const target = (e.target as HTMLElement).closest<HTMLElement>(".step-no");
-    if (target) {
-      target.classList.add("dragging");
-      e.dataTransfer?.setData("text/plain", "");
-    }
-  });
+  const dragging = document.querySelector<HTMLElement>(".is-dragging");
+  const over = target.closest<HTMLElement>(".step-entry:not(.is-dragging)");
+  if (!dragging || !over || over.parentElement !== dragging.parentElement) return;
+  event.preventDefault();
+  const { top, height } = over.getBoundingClientRect();
+  if (event.clientY < top + height / 2) over.before(dragging);
+  else over.after(dragging);
+});
 
-  instructionsList?.addEventListener("dragend", () => {
-    document.querySelector(".dragging")?.classList.remove("dragging");
-  });
+document.addEventListener("dragleave", (event) => {
+  (event.target as HTMLElement).closest(".polaroid")?.classList.remove("is-dragover");
+});
 
-  instructionsList?.addEventListener("dragover", (e: DragEvent) => {
-    e.preventDefault();
-    const dragging = document.querySelector<HTMLElement>(".dragging");
-    const target = (e.target as HTMLElement).closest<HTMLElement>(
-      ".step-no:not(.dragging)",
-    );
+document.addEventListener("drop", (event) => {
+  const zone = (event.target as HTMLElement).closest<HTMLLabelElement>(".polaroid");
+  if (!zone || !event.dataTransfer?.files.length) return;
+  event.preventDefault();
+  zone.classList.remove("is-dragover");
+  const input = document.getElementById(zone.htmlFor) as HTMLInputElement | null;
+  if (!input) return;
+  input.files = event.dataTransfer.files;
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+});
 
-    if (dragging && target) {
-      const rect = target.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        instructionsList?.insertBefore(dragging, target);
-      } else {
-        instructionsList?.insertBefore(dragging, target.nextSibling);
-      }
-    }
-  });
-}
+// Photo preview 
 
-// Init on DOM ready
-document.addEventListener("DOMContentLoaded", () => {
-  initDragDrop();
+document.addEventListener("change", (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || input.type !== "file") return;
+  const file = input.files?.[0];
+
+  // File name
+  const output = document.getElementById(`${input.id}-name`);
+  if (output) output.textContent = file ? `Selected: ${file.name}` : "";
+
+  // Show the chosen photo
+  const preview = document.getElementById(input.dataset.preview ?? "") as HTMLImageElement | null;
+  if (!preview) return;
+  // Free the previous preview from memory
+  const oldUrl = preview.getAttribute("src");
+  if (oldUrl?.startsWith("blob:")) URL.revokeObjectURL(oldUrl);
+
+  const hasImage = Boolean(file && file.type.startsWith("image/"));
+  if (hasImage && file) preview.src = URL.createObjectURL(file);
+  else preview.removeAttribute("src");
+  preview.hidden = !hasImage;
+  preview.closest(".polaroid")?.classList.toggle("has-photo", hasImage);
 });

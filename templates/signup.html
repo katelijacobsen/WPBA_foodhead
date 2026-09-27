@@ -1,103 +1,49 @@
-{% extends 'base.html' %} {% block header %}
-<h1>{% block title%} Sign Up {% endblock title %}</h1>
-{% endblock header %} {% block content%}
-<form mix-post="/api-create-user" id="signup" class="signup">
-  <legend>Sign up here & become a foodhead</legend>
+{% extends 'base.html' %}
+{% from 'macros.html' import field %}
 
-  <div class="field">
-    <label for="user_username" placeholder=" ">Username</label>
-    <input
-      type="text"
-      name="user_username"
-      id="user_username"
-      aria-describedby="signup-error"
-      mix-validate="{{ config.REGEX_USER_NAME }}"
-    />
-    <span id="username-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
-  <div class="field">
-    <label for="user_first_name" placeholder=" ">First name</label>
-    <input
-      type="text"
-      name="user_first_name"
-      id="user_first_name"
-      aria-describedby="signup-error"
-      mix-validate="{{ config.REGEX_USER_NAME }}"
-    />
-    <span id="user-first-name-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
-  <div class="field">
-    <label for="user_last_name" placeholder=" ">Last name</label>
-    <input
-      type="text"
-      name="user_last_name"
-      id="user_last_name"
-      aria-describedby="signup-error"
-      mix-validate="{{ config.REGEX_USER_NAME }}"
-    />
-    <span id="user-last-name-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
+{% block title %}Sign up · Foodhead{% endblock title %}
 
-  <div class="field">
-    <label for="user_country_id" placeholder=" ">Country</label>
-    <input
-      type="text"
-      name="user_country_id"
-      id="user_country_id"
-      aria-describedby="signup-error"
-    />
-    <span id="signup-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
+{% block content %}
+<div class="auth">
+  <header class="auth__header">
+    <img class="auth__logo" src="{{ url_for('static', filename='imgs/foodhead-logo.png') }}" alt="" width="252" height="273" />
+    <h1 id="signup-heading" class="auth__title">Create account</h1>
+    <p class="auth__lead">Become a foodhead and share your recipes.</p>
+  </header>
 
-  <div class="field">
-    <label for="user_email" placeholder=" ">Email</label>
-    <input
-      type="email"
-      name="user_email"
-      id="user_email"
-      aria-describedby="signup-error"
-    />
-    <span id="email-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
+  <form mix-post="{{ url_for('user_api.api_create_user') }}" class="auth__form" novalidate aria-labelledby="signup-heading">
+    {% set name_hint = rules.USER_NAME_MIN ~ "–" ~ rules.USER_NAME_MAX ~ " characters" %}
 
-  <div class="field">
-    <label for="user_tel" placeholer=" ">Phonenumber</label>
-    <input
-      type="tel"
-      name="user_tel"
-      id="user_tel"
-      aria-describedby="signup-error"
-    />
-    <span id="phone-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
+    {{ field("user_username", "Username", hint=name_hint,
+             validate=rules.REGEX_USER_NAME, autocomplete="username", maxlength=rules.USER_NAME_MAX) }}
+    {{ field("user_first_name", "First name", hint=name_hint,
+             validate=rules.REGEX_USER_NAME, autocomplete="given-name", maxlength=rules.USER_NAME_MAX) }}
+    {{ field("user_last_name", "Last name", hint=name_hint,
+             validate=rules.REGEX_USER_NAME, autocomplete="family-name", maxlength=rules.USER_NAME_MAX) }}
 
-  <div class="field">
-    <label for="user_password">Password</label>
-    <input
-      type="password"
-      name="user_password"
-      id="user_password"
-      aria-describedby="signup-error"
-      required
-    />
-    <span id="signup-error" class="error-msg" aria-live="polite"
-      ></span
-    >
-  </div>
+    <div class="field">
+      <label for="user_country_id">Country</label>
+      <select id="user_country_id" name="user_country_id" required aria-describedby="user_country_id-error">
+        <option value="">Choose your country</option>
+        {% for country in countries %}
+        <option value="{{ country.country_id }}">{{ country.country_name }}</option>
+        {% endfor %}
+      </select>
+      <p id="user_country_id-error" class="field-error"></p>
+    </div>
 
-  <button class="primary-btn">Sign up</button>
-  <div id="tip"></div>
-</form>
-{% endblock content%}
+    {{ field("user_email", "Email", type="email", placeholder="name@example.com",
+             validate=rules.REGEX_USER_EMAIL, autocomplete="email", maxlength=rules.USER_EMAIL_MAX) }}
+    {{ field("user_phone", "Phone number", type="tel",
+             hint=rules.USER_PHONE_MIN ~ "–" ~ rules.USER_PHONE_MAX ~ " digits",
+             validate=rules.REGEX_USER_PHONE, autocomplete="tel") }}
+    {{ field("user_password", "Password", type="password",
+             hint=rules.USER_PASSWORD_MIN ~ "–" ~ rules.USER_PASSWORD_MAX ~ " characters",
+             validate=rules.REGEX_USER_PASSWORD, autocomplete="new-password", maxlength=rules.USER_PASSWORD_MAX) }}
+
+    <button class="primary-btn primary-btn--block" mix-await="Creating account…" mix-done="Continue">Continue</button>
+  </form>
+
+  <p class="auth__switch">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+</div>
+{% endblock content %}

@@ -1,34 +1,164 @@
-<!-- Practical recipe overview -->
+{# ---------- Main navigation link: icon + label, marks the current page ----------
+   The icon is used as a CSS mask, so it takes the text colour. That keeps all icons
+   the same colour, highlights the current page, and works in Windows high contrast mode. #}
+{% macro nav_link(endpoint, label, icon, width=24, height=24) %}
+<li>
+  <a class="site-nav__link" href="{{ url_for(endpoint) }}"
+     {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>
+    <span class="site-nav__icon" aria-hidden="true"
+          style="--icon: url('{{ url_for('static', filename='icons/' ~ icon) }}'); --icon-w: {{ width }}px; --icon-h: {{ height }}px"></span>
+    <span class="site-nav__label">{{ label }}</span>
+  </a>
+</li>
+{% endmacro %}
 
-{% macro overview(label, icon) %}
-<div class="recipe-overview">
-    <dt>
-        <img src="{{ url_for('static', filename='icons/' ~ icon)}}"
-        alt=""
-        aria-hidden="true"
-        width="20"
-        height="20"/>
-        {{ label }}
-    </dt>
-    <dd>{{ caller() }}</dd>
+
+{# ---------- Avatar: the first letter of the username until users can upload a photo ---------- #}
+{% macro avatar(username, size=32) %}
+<span class="avatar avatar--{{ size }}" aria-hidden="true">{{ (username or "?")[:1] | upper }}</span>
+{% endmacro %}
+
+
+{# ---------- Recipe stats: prep time, total time, servings ---------- #}
+{% macro stat(label, icon, width, height) %}
+<div class="recipe-stat">
+  <dt>
+    <img src="{{ url_for('static', filename='icons/' ~ icon) }}" alt="" width="{{ width }}" height="{{ height }}" />
+    {{ label }}
+  </dt>
+  <dd>{{ caller() }}</dd>
 </div>
 {% endmacro %}
 
-{% macro recipe_overview(recipe)%}
-<dl class="recipe-overviews">
-    <!--Prep time-->
-    {% call overview("Prep time", "clock-icon.svg") %}
-    <time>{{ recipe.recipe_prep_time}} min</time>
-    {% endcall %}
-
-    <!--Cooking time-->
-    {% call overview("Cook time", "chef-hat-icon.svg") %}
-    <time>{{ recipe.recipe_cook_time}} min</time>
-    {% endcall %}
-    
-    <!--Servings-->
-    {% call overview("Prep time", "servings-icon.svg") %}
-    {{recipe.recipe_servings}}
-    {% endcall %}
+{% macro recipe_overview(recipe) %}
+{% set total = recipe.recipe_prep_time + recipe.recipe_cook_time %}
+<dl class="recipe-stats">
+  {% call stat("Prep time", "chef-hat-icon.svg", 18, 17) %}
+    <time datetime="{{ recipe.recipe_prep_time | iso_duration }}">{{ recipe.recipe_prep_time | duration }}</time>
+  {% endcall %}
+  {% call stat("Total time", "clock-icon.svg", 19, 23) %}
+    <time datetime="{{ total | iso_duration }}">{{ total | duration }}</time>
+  {% endcall %}
+  {% call stat("Servings", "servings-icon.svg", 24, 24) %}
+    {{ recipe.recipe_servings }}
+  {% endcall %}
 </dl>
+{% endmacro %}
+
+
+{# ---------- Recipe card: the whole card is clickable through the title link ---------- #}
+{% macro recipe_card(recipe) %}
+{% set total = recipe.recipe_prep_time + recipe.recipe_cook_time %}
+<article class="recipe-card">
+  {% if recipe.recipe_img_key %}
+  <img class="recipe-card__img" src="{{ url_for('static', filename='uploads/' ~ recipe.recipe_img_key) }}"
+       alt="" loading="lazy" />
+  {% else %}
+  <span class="recipe-card__img" aria-hidden="true"></span>
+  {% endif %}
+  <h3 class="recipe-card__title">
+    <a href="{{ url_for('view_recipe', recipe_id=recipe.recipe_id) }}">{{ recipe.recipe_title }}</a>
+  </h3>
+  <p class="recipe-card__meta">
+    {% if recipe.user_username %}
+    {{ avatar(recipe.user_username, 24) }}
+    <span class="visually-hidden">By {{ recipe.user_username }}.</span>
+    {% endif %}
+    <span class="recipe-card__time">
+      <img src="{{ url_for('static', filename='icons/clock-icon.svg') }}" alt="" width="10" height="12" />
+      <span class="visually-hidden">Total time:</span>
+      <time datetime="{{ total | iso_duration }}">{{ total | duration }}</time>
+    </span>
+  </p>
+</article>
+{% endmacro %}
+
+
+{# ---------- Form field: label, input, hint and error kept together ----------
+   Extra keyword arguments become attributes: field(..., autocomplete="email") #}
+{% macro field(id, label, value=none, type="text", hint="", validate="", required=true) %}
+<div class="field">
+  <label for="{{ id }}">{{ label }}</label>
+  <input
+    id="{{ id }}"
+    name="{{ id }}"
+    type="{{ type }}"
+    value="{{ '' if value is none else value }}"
+    {% if required %}required{% endif %}
+    {% if validate %}mix-validate="{{ validate }}"{% endif %}
+    aria-describedby="{% if hint %}{{ id }}-hint {% endif %}{{ id }}-error"
+    {{ kwargs | xmlattr }}
+  />
+  {% if hint %}<p id="{{ id }}-hint" class="field-hint">{{ hint }}</p>{% endif %}
+  <p id="{{ id }}-error" class="field-error"></p>
+</div>
+{% endmacro %}
+
+{# ---------- Number stepper: − [ 30 ] min + ----------
+   The input still works on its own (typing, arrow keys); the buttons are a shortcut #}
+{% macro stepper(id, label, value, min, max, step=1, unit="", hint="") %}
+<div class="field stepper-field">
+  <label for="{{ id }}">{{ label }}</label>
+  <div class="stepper">
+    <button type="button" class="stepper__btn" aria-controls="{{ id }}"
+            onclick="stepNumber('{{ id }}', -1)" aria-label="Less {{ label | lower }}">
+      <img src="{{ url_for('static', filename='icons/subtract_icon.svg') }}" alt="" width="24" height="24" />
+    </button>
+    <span class="stepper__value">
+      <input id="{{ id }}" name="{{ id }}" type="number" inputmode="numeric" required
+             value="{{ value }}" min="{{ min }}" max="{{ max }}" step="{{ step }}"
+             aria-describedby="{% if hint %}{{ id }}-hint {% endif %}{{ id }}-error" />
+      {% if unit %}<span class="stepper__unit" aria-hidden="true">{{ unit }}</span>{% endif %}
+    </span>
+    <button type="button" class="stepper__btn" aria-controls="{{ id }}"
+            onclick="stepNumber('{{ id }}', 1)" aria-label="More {{ label | lower }}">
+      <img src="{{ url_for('static', filename='icons/add_icon.svg') }}" alt="" width="24" height="24" />
+    </button>
+  </div>
+  {% if hint %}<p id="{{ id }}-hint" class="field-hint">{{ hint }}</p>{% endif %}
+  <p id="{{ id }}-error" class="field-error"></p>
+</div>
+{% endmacro %}
+
+
+{# ---------- One ingredient row. Used for saved rows AND inside <template> for new rows ---------- #}
+{% macro ingridient_row(ingridient=none) %}
+<li class="ingredient-entry">
+  <input class="ingredient-entry__name" type="text" name="ingridient_name" aria-label="Ingredient"
+         placeholder="Butter" maxlength="{{ rules.INGRIDIENT_NAME_MAX }}"
+         value="{{ ingridient.ingridient_names if ingridient else '' }}" />
+  <input class="ingredient-entry__amount" type="text" name="ingridient_amount" aria-label="Amount"
+         placeholder="170" inputmode="decimal" maxlength="{{ rules.INGRIDIENT_AMOUNT_MAX }}"
+         value="{{ ingridient.ingridient_amounts if ingridient else '' }}" />
+  <select class="ingredient-entry__unit" name="ingridient_unit" aria-label="Unit">
+    {% for unit in rules.INGRIDIENT_UNITS %}
+    <option value="{{ unit }}" {% if ingridient and ingridient.ingridient_units == unit %}selected{% endif %}>
+      {{ unit or "no unit" }}
+    </option>
+    {% endfor %}
+  </select>
+  <button type="button" class="row-btn row-btn--remove" onclick="removeRow(this)" aria-label="Remove ingredient">
+    <img src="{{ url_for('static', filename='icons/delete_icon.svg') }}" alt="" width="24" height="24" />
+  </button>
+</li>
+{% endmacro %}
+
+
+{# ---------- One instruction step. Move buttons are the keyboard/touch alternative to dragging (WCAG 2.5.7) ---------- #}
+{% macro instruction_row(step=none) %}
+<li class="step-entry" draggable="true">
+  <span class="step-entry__handle" aria-hidden="true">
+    <img src="{{ url_for('static', filename='icons/drag_icon.svg') }}" alt="" width="24" height="24" />
+  </span>
+  <textarea class="step-entry__text" name="instruction" aria-label="Step" rows="3"
+            placeholder="Describe this step…"
+            maxlength="{{ rules.INSTRUCTION_MAX }}">{{ step.instruction if step else '' }}</textarea>
+  <span class="step-entry__actions">
+    <button type="button" class="row-btn" onclick="moveRow(this, -1)" aria-label="Move step up">↑</button>
+    <button type="button" class="row-btn" onclick="moveRow(this, 1)" aria-label="Move step down">↓</button>
+    <button type="button" class="row-btn row-btn--remove" onclick="removeRow(this)" aria-label="Remove step">
+      <img src="{{ url_for('static', filename='icons/delete_icon.svg') }}" alt="" width="24" height="24" />
+    </button>
+  </span>
+</li>
 {% endmacro %}

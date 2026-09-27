@@ -1,11 +1,6 @@
-from flask import request, make_response
-from functools import wraps # use decorator so the function knows automatically not to cache
 import mysql.connector
-import re # Regex
-import regex
 
 #_____CONNECT TO DB_____##############################
-
 def db():
     try:
         db = mysql.connector.connect(
@@ -20,4 +15,8 @@ def db():
         print(e, flush=True)
         raise Exception("Database under maintenance", 500)
 
+
+def close(db, cursor):
+    if cursor: cursor.close()
+    if db: db.close()
 ##############################_____CONNECT TO DB_____#

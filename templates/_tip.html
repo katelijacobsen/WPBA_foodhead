@@ -1,0 +1,14 @@
+{% set icons = {"error": "warning_icon.svg", "success": "check_icon.svg", "info": "info_icon.svg"} %}
+<div class="toast toast--{{ status }}" {% if ttl %}mix-ttl="{{ ttl }}"{% endif %}>
+  <span class="toast__icon">
+    <img src="{{ url_for('static', filename='icons/' ~ icons[status]) }}" alt="" width="20" height="20" />
+  </span>
+  <p class="toast__text">
+    <strong>{{ title }}</strong>
+    {% if message %}<span>{{ message }}</span>{% endif %}
+  </p>
+  <button type="button" class="toast__close" aria-label="Dismiss notification"
+          onclick="this.closest('.toast').remove()">
+    <img src="{{ url_for('static', filename='icons/close_icon.svg') }}" alt="" width="20" height="20" />
+  </button>
+</div>

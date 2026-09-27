@@ -25,6 +25,7 @@ RECIPE_INGRIDIENTS_MAX = 30
 
 INSTRUCTION_MIN = 5
 INSTRUCTION_MAX = 500
+RECIPE_STEPS_MAX = 30
 
 ###### IMAGE UPLOAD ###### 
 IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
@@ -33,7 +34,7 @@ IMAGE_MAX_MB = 2
 
 ###### REGEX ###### 
 REGEX_ID = "^[0-9a-f]{32}$"
-REGEX_USER_EMAIL = "^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$"
+REGEX_USER_EMAIL = r"^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$"
 REGEX_USER_NAME = f"^.{{{USER_NAME_MIN},{USER_NAME_MAX}}}$"
 REGEX_USER_PASSWORD = f"^.{{{USER_PASSWORD_MIN},{USER_PASSWORD_MAX}}}$"
 REGEX_USER_PHONE = f"^\\+?[0-9 ]{{{USER_PHONE_MIN},{USER_PHONE_MAX}}}$"

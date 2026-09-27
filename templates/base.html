@@ -1,78 +1,57 @@
 <!doctype html>
+{% from 'macros.html' import nav_link with context %}
 <html lang="en">
   <head>
     {% block head %}
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}" />
-    <script src="/static/dist/app.js" defer></script>
-    <title>{% block title %}{% endblock title %}</title>
+    <script src="{{ url_for('static', filename='dist/app.js') }}" defer></script>
+    <title>{% block title %}Foodhead{% endblock title %}</title>
     {% endblock head %}
   </head>
   <body>
-    <header>
-      <nav>
-        {% if g.user %}
-        <ul>
-          <li>
-            <a href="/">
-              <img
-                class="logo"
-                alt="boy with head full of spaghetti and meatballs"
-                src="/static/imgs/foodhead-logo.png"
-              />
-            </a>
-          </li>
-          <li>
-            <a class="primary-btn" href="/create"
-              >Create Recipe
-              <img
-                class="create-icon"
-                alt="cookbook with plus icon"
-                src="/static/icons/create-icon.svg"
-            /></a>
-          </li>
-          <li class="nav-auth-group">
-            <span>{{ g.user['user_username']}}</span>
-            <a class="logout-btn" href="{{ url_for('logout') }}">
-              Logout
-              <img alt="login-icon" src="/static/icons/logout_icon.svg" />
-            </a>
-          </li>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <a class="site-logo" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='imgs/foodhead-logo.png') }}"
+             alt="Foodhead, go to the front page" width="252" height="273" />
+      </a>
+      {# Bottom tab bar on phones, top navigation from 768px #}
+      <nav class="site-nav" aria-label="Main">
+        <ul role="list">
+          {{ nav_link("index", "Home", "home_icon.svg", 16, 18) }}
+          {% if g.user %}
+            {{ nav_link("create_page", "Create", "add_icon.svg") }}
+            {{ nav_link("logout", "Log out", "logout_icon.svg", 18, 18) }}
+          {% else %}
+            {{ nav_link("login", "Log in", "login_icon.svg") }}
+            {{ nav_link("signup", "Sign up", "user_icon.svg") }}
+          {% endif %}
         </ul>
-        {% else %}
-        <ul>
-          <li>
-            <a href="/">
-              <img
-                class="logo"
-                alt="boy with head full of spaghetti and meatballs"
-                src="/static/imgs/foodhead-logo.png"
-              />
-            </a>
-          </li>
-          <li class="nav-auth-group">
-            <a class="primary-btn" href="{{ url_for('login') }}">
-              Login <img alt="login-icon" src="/static/icons/login_icon.svg" />
-            </a>
-            <a class="secondary-btn" href="{{ url_for('signup_post') }}">Sign up</a>
-          </li>
-        </ul>
-        {% endif %}
       </nav>
     </header>
-    <main>{% block content %}{% endblock content %}</main>
+
+    <main id="main">{% block content %}{% endblock content %}</main>
+
+    {# Live regions must exist when the page loads, or screen readers won't watch them #}
+    <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false">
+      {% for status, text in get_flashed_messages(with_categories=true) %}
+        {% set title = text %}{% set message = "" %}{% set ttl = 5000 %}
+        {% include "_tip.html" %}
+      {% endfor %}
+    </div>
+    <p id="announcer" class="visually-hidden" aria-live="polite"></p>
+
     <footer>
-      <a href="/">
-        <img
-          class="logo"
-          alt="boy with head full of spaghetti and meatballs"
-          src="/static/imgs/spicy-foodhead.png"
-        />
+      <a href="{{ url_for('index') }}">
+        <img class="logo" alt="Foodhead, go to the front page"
+             src="{{ url_for('static', filename='imgs/spicy-foodhead.png') }}" width="212" height="212" />
       </a>
       <p>Made by <strong>Katja M.</strong></p>
       <p>Web Development · 1st Semester · Erhvervsakademi København 2026</p>
     </footer>
-    <script src="/static/mixhtml.js"></script>
+    <script src="{{ url_for('static', filename='mixhtml.js') }}"></script>
   </body>
 </html>

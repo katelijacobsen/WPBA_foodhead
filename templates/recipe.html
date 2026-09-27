@@ -1,72 +1,93 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import recipe_overview %}
+{% from 'macros.html' import recipe_overview, avatar %}
 
-{% block title %}{{ recipe.recipe_title }} Foodhead {% endblock title %}
+{% block title %}{{ recipe.recipe_title }} · Foodhead{% endblock title %}
 
 {% block content %}
 <article class="recipe-page" aria-labelledby="recipe-title">
-
-  {% if recipe.recipe_img_key %}
-  {# alt="" because the <h1> right after already names the dish; see the note below #}
-  <img
-    class="recipe-hero"
-    src="{{ url_for('static', filename='uploads/' ~ recipe.recipe_img_key) }}"
-    alt=""
-  />
-  {% endif %}
-
-  <header class="recipe-header">
-    <h1 id="recipe-title" class="recipe-title">{{ recipe.recipe_title }}</h1>
-    {% if recipe.user_username %}
-    <p class="recipe-owner">By {{ recipe.user_username }}</p>
-    {% endif %}
-  </header>
-
-  <section aria-labelledby="overview-heading">
-    <h2 id="overview-heading" class="visually-hidden">Overview</h2>
-    {{ recipe_overview(recipe) }}
-  </section>
-
-  <section aria-labelledby="description-heading">
-    <h2 id="description-heading">Description</h2>
-    <p class="recipe-description">{{ recipe.recipe_description }}</p>
-  </section>
-
-  <section aria-labelledby="ingredients-heading">
-    <h2 id="ingredients-heading">Ingredients</h2>
-    {% if ingridients %}
-    <ul class="ingredients-list" role="list">
-      {% for ingridient in ingridients %}
-      <li class="ingredient-row">
-        <span class="ingredient-amount">{{ ingridient.ingridient_amounts }}</span>
-        <span class="ingredient-unit">{{ ingridient.ingridient_units }}</span>
-        <span class="ingredient-name">{{ ingridient.ingridient_names }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p>No ingredients have been added yet.</p>
-    {% endif %}
-  </section>
-
-  <section aria-labelledby="instructions-heading">
-    <h2 id="instructions-heading">Instructions</h2>
-    {% if instructions %}
-    <ol class="instructions-list" role="list">
-      {% for step in instructions %}
-      <li><span>{{ step.instruction }}</span></li>
-      {% endfor %}
-    </ol>
-    {% else %}
-    <p>No instructions have been added yet.</p>
-    {% endif %}
-  </section>
-
-  {% if is_owner %}
-  <a class="primary-btn" href="{{ url_for('edit_recipe', recipe_id=recipe.recipe_id) }}">
-    Edit recipe
+  <a class="back-link" href="{{ url_for('index') }}">
+    Back
+    <img src="{{ url_for('static', filename='icons/back_icon.svg') }}" alt="" width="18" height="18" />
   </a>
-  {% endif %}
 
+  <div class="recipe-top">
+    <div class="recipe-media">
+      {% if recipe.recipe_img_key %}
+      {# alt="" because the <h1> already names the dish #}
+      <img class="recipe-hero" src="{{ url_for('static', filename='uploads/' ~ recipe.recipe_img_key) }}" alt="" />
+      {% endif %}
+
+      {% if is_owner %}
+      <div class="recipe-actions">
+        <a class="icon-btn" href="{{ url_for('edit_recipe', recipe_id=recipe.recipe_id) }}">
+          <img src="{{ url_for('static', filename='icons/edit_icon.svg') }}" alt="" width="24" height="24" />
+          <span class="visually-hidden">Edit recipe</span>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="recipe-intro">
+      {% if recipe.user_username %}
+      <p class="author-card">
+        {{ avatar(recipe.user_username, 32) }}
+        <span class="author-card__text">
+          <span class="author-card__name"><span class="visually-hidden">By </span>{{ recipe.user_username }}</span>
+          <time class="author-card__date" datetime="{{ recipe.recipe_created_at | date_iso }}">
+            {{ recipe.recipe_created_at | date_text }}
+          </time>
+        </span>
+      </p>
+      {% endif %}
+
+      <h1 id="recipe-title" class="recipe-title">{{ recipe.recipe_title }}</h1>
+
+      <section aria-labelledby="overview-heading">
+        <h2 id="overview-heading" class="visually-hidden">Overview</h2>
+        {{ recipe_overview(recipe) }}
+      </section>
+
+      <p class="recipe-description">{{ recipe.recipe_description }}</p>
+    </div>
+  </div>
+
+  <div class="recipe-body">
+    <section class="recipe-box" aria-labelledby="ingredients-heading">
+      <h2 id="ingredients-heading" class="recipe-box__title">Ingredients</h2>
+      {% if ingridients %}
+      <ul class="ingredient-list" role="list">
+        {% for ingridient in ingridients %}
+        <li>
+          {{ ingridient.ingridient_amounts }}{% if ingridient.ingridient_units %} {{ ingridient.ingridient_units }}{% endif %}
+          {{ ingridient.ingridient_names }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="recipe-box__empty">No ingredients have been added yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="recipe-box recipe-box--steps" aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading" class="recipe-box__title">
+        Ready. Set. Go!<span class="visually-hidden"> Instructions</span>
+      </h2>
+      {% if instructions %}
+      {# Ticking off a step only lives in the browser, it isn't saved #}
+      <ol class="step-list" role="list">
+        {% for step in instructions %}
+        <li>
+          <label class="step">
+            <input type="checkbox" class="step__check" />
+            <span class="step__text"><span class="visually-hidden">Step {{ loop.index }}: </span>{{ step.instruction }}</span>
+          </label>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="recipe-box__empty">No instructions have been added yet.</p>
+      {% endif %}
+    </section>
+  </div>
 </article>
 {% endblock content %}

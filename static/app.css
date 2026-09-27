@@ -627,3 +627,1350 @@ footer strong {
   background: var(--accent);
   transform: translateY(-2px);
 }
+
+
+html {
+  --success-700: #2e7d1a;   /* darker than #68c93b so it passes 3:1 contrast on cream */
+  --error-100: #fde8e4;
+  --success-100: #e6f4e0;
+  --info-100: #e8e9ff;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Fields ---------- */
+.field-hint  { margin: var(--space-1) 0 0; font-size: var(--text-h6); color: var(--secondary-500); }
+.field-error { margin: var(--space-1) 0 0; font-size: var(--text-h6); color: var(--error-color); }
+.field-error:empty { display: none; }
+
+input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"],
+input.mix-error, textarea.mix-error {
+  background-color: var(--primary-0);          /* overrides mixhtml's pink */
+  border: 2px solid var(--error-color);
+  box-shadow: inset 4px 0 0 var(--error-color);
+}
+
+/* ---------- Tips ---------- */
+.toasts {
+  position: fixed;
+  inset: auto var(--space-4) calc(var(--space-24) + env(safe-area-inset-bottom)) var(--space-4);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .toasts { inset: var(--space-6) var(--space-6) auto auto; width: 24rem; }
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--primary-0);
+  color: var(--secondary);
+  border: 1.5px solid var(--secondary);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--secondary);
+}
+.toast__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+}
+.toast--error   .toast__icon { background: var(--error-100);   color: var(--error-color); }
+.toast--success .toast__icon { background: var(--success-100); color: var(--success-700); }
+.toast--info    .toast__icon { background: var(--info-100);    color: var(--info-color); }
+.toast__text { margin: 0; display: flex; flex-direction: column; font-size: var(--text-h6); }
+.toast__text strong { font-family: "sf-bold", sans-serif; }
+.toast__close {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
+  margin-block: calc(var(--space-3) * -1);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="mix-fade-"] { animation: none !important; opacity: 1 !important; }
+}
+
+/*____________________________________________________________
+  MADHOVEDET DESIGN (Figma)
+  Tokens → base → navigation → buttons → cards → pages
+____________________________________________________________*/
+
+html {
+  /* Figma type scale. Headlines scale down on small screens */
+  --font-header: clamp(2.5rem, 2rem + 2.2vw, 3.338rem);   /* header 53.41px */
+  --font-quote: clamp(1.75rem, 1.5rem + 1.1vw, 2.136rem); /* quote 34.18px */
+  --font-stat: 1.375rem;                                   /* 21.88px */
+  --font-body: 1rem;                                       /* 16px */
+  --font-small: 0.8rem;                                    /* 12.8px */
+  --font-label: 0.75rem;                                   /* Figma 11.2px, raised to 12px so it stays readable */
+
+  /* Figma spacing */
+  --gap-xxs: 4px;
+  --gap-xs: 8px;
+  --gap-sm: 12px;
+  --gap-base: 16px;
+  --gap-md: 24px;
+  --gap-lg: 32px;
+  --gap-xl: 36px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-pill: 100px;
+
+  --shadow-hard: 4px 4px 0 var(--secondary);
+  --shadow-btn: 0 3px 0 var(--accent-700), 0 4.2px 0 var(--accent-900);
+
+  --page-max: 1120px;
+  --nav-height: 72px;
+}
+
+/* ---------- Base ---------- */
+/* Padding and borders count inside width/height, so width: 100% never overflows */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--primary-50);
+  color: var(--secondary);
+  font-family: "sf-regular", system-ui, sans-serif;
+  font-size: var(--font-body);
+  line-height: 1.375;
+  /* Room for the bottom tab bar on phones */
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+}
+
+main {
+  flex: 1;
+  width: min(100% - 2 * var(--gap-md), var(--page-max));
+  margin-inline: auto;
+  padding-block: var(--gap-md) var(--gap-xl);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 400; /* Gumbo has one weight, so stop the browser faking bold */
+}
+
+h1 {
+  font-size: var(--font-header);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+a {
+  color: var(--accent-900);
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--gap-base);
+  z-index: 100;
+  padding: var(--gap-xs) var(--gap-base);
+  background: var(--secondary);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+}
+.skip-link:focus {
+  top: var(--gap-base);
+}
+
+/* ---------- Navigation: bottom tab bar on phones, top bar from 768px ---------- */
+.site-logo {
+  display: none;
+}
+
+.site-nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 40;
+  padding: var(--gap-xs) var(--gap-base) calc(var(--gap-xs) + env(safe-area-inset-bottom));
+  background: var(--primary-0);
+  border-top: 1px solid var(--secondary-300);
+}
+
+.site-nav ul {
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+}
+
+.site-nav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+  padding: var(--gap-xxs) var(--gap-xs);
+  border-radius: var(--gap-xs);
+  color: var(--secondary);
+  font: var(--font-label) / 1.3 "sf-medium", sans-serif;
+  text-decoration: none;
+}
+
+.site-nav__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+/* Draw the icon file in the current text colour */
+.site-nav__icon::before {
+  content: "";
+  width: var(--icon-w);
+  height: var(--icon-h);
+  background: currentColor;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.site-nav__link:hover {
+  background: var(--accent-50);
+}
+
+.site-nav__link[aria-current="page"] {
+  background: var(--accent-100);
+  color: var(--accent-900);
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100% - 2 * var(--gap-md), var(--page-max));
+    margin-inline: auto;
+    padding-block: var(--gap-base);
+  }
+
+  .site-logo {
+    display: block;
+  }
+
+  .site-logo img {
+    width: auto;
+    height: 64px;
+  }
+
+  .site-nav {
+    position: static;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+
+  .site-nav ul {
+    gap: var(--gap-xs);
+  }
+
+  .site-nav__link {
+    flex-direction: row;
+    gap: var(--gap-xs);
+    min-height: 44px;
+    padding: var(--gap-xs) var(--gap-sm);
+    font-size: var(--font-body);
+  }
+}
+
+/* ---------- Buttons ---------- */
+.primary-btn,
+.secondary-btn,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xxs);
+  min-height: 44px;
+  padding: var(--gap-xxs) var(--gap-base);
+  border-radius: var(--radius-pill);
+  font: var(--font-body) / 1.4 "sf-bold", sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Figma "Button type". Charcoal text instead of cream: cream on orange is only 3:1 */
+.primary-btn {
+  background: var(--accent);
+  color: var(--secondary);
+  border: 1px solid var(--accent-900);
+  box-shadow: var(--shadow-btn);
+}
+.primary-btn:hover {
+  background: var(--accent-400);
+}
+.primary-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--accent-700), 0 2px 0 var(--accent-900);
+}
+.primary-btn:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+/* Full-width variant used on the login and signup forms */
+.primary-btn--block {
+  width: 100%;
+  box-shadow: var(--shadow-hard);
+}
+
+.secondary-btn {
+  background: var(--primary-0);
+  color: var(--secondary);
+  border: 1px solid var(--secondary);
+  box-shadow: var(--shadow-hard);
+}
+
+/* Round orange button with only an icon (owner actions on a recipe) */
+.icon-btn {
+  width: 44px;
+  padding: 0;
+  background: var(--accent);
+  border: 1px solid var(--accent-900);
+  box-shadow: var(--shadow-btn);
+}
+
+/* "Back" pill */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--gap-xxs);
+  min-height: 32px;
+  padding: var(--gap-xxs) var(--gap-base);
+  border-radius: var(--radius-pill);
+  background: var(--accent-200);
+  color: var(--secondary);
+  font: var(--font-body) / 1.4 "sf-bold", sans-serif;
+  text-decoration: none;
+}
+.back-link:hover {
+  background: var(--accent-300);
+}
+
+/* ---------- Avatar ---------- */
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--secondary);
+  border-radius: 50%;
+  background: var(--accent-200);
+  color: var(--accent-900);
+  font-family: "sf-bold", sans-serif;
+  line-height: 1;
+}
+.avatar--24 { width: 24px; height: 24px; font-size: 0.75rem; }
+.avatar--32 { width: 32px; height: 32px; font-size: 0.875rem; }
+
+/* ---------- Front page ---------- */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  margin-bottom: var(--gap-xl);
+}
+
+.page-lead {
+  color: var(--secondary-700);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-base);
+}
+
+.section-title {
+  font-size: var(--font-quote);
+  line-height: 1.2;
+}
+
+/* Swipeable row on phones. It bleeds to the screen edges like in Figma */
+.card-carousel {
+  display: flex;
+  gap: var(--gap-base);
+  margin-inline: calc(var(--gap-md) * -1);
+  padding: 2px var(--gap-md) var(--gap-sm);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gap-md);
+  list-style: none;
+}
+
+.card-carousel > li {
+  display: flex;
+  flex: 0 0 152px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .card-carousel {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+}
+
+/* Figma component "Card" */
+.recipe-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xs);
+  width: 100%;
+  padding: var(--gap-xs);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+  transition: box-shadow 0.15s;
+}
+.recipe-card:hover {
+  box-shadow: var(--shadow-hard);
+}
+
+.recipe-card__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 122.8 / 113.1;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  background: var(--accent-100);
+}
+
+.recipe-card__title {
+  font: var(--font-small) / 1.4 "sf-bold", sans-serif;
+  letter-spacing: 0;
+}
+
+.recipe-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Stretch the title link over the whole card, so the card has one link, not three */
+.recipe-card__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.recipe-card__title a:focus-visible {
+  outline: none;
+}
+.recipe-card:has(a:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.recipe-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-xs);
+  margin-top: auto;
+  color: var(--secondary-700);
+  font: var(--font-label) / 1.5 "sf-medium", sans-serif;
+}
+
+.recipe-card__time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-xxs);
+  margin-left: auto;
+}
+
+/* ---------- Single recipe ---------- */
+.recipe-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.recipe-top,
+.recipe-body {
+  display: grid;
+  gap: 18px;
+}
+
+.recipe-media,
+.recipe-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-base);
+  min-width: 0;
+}
+
+.recipe-intro {
+  gap: 18px;
+}
+
+.recipe-hero {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+  box-shadow: 5px 5px 0 var(--secondary);
+}
+
+.recipe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-inline: var(--gap-md);
+}
+
+/* Figma "User Info" */
+.author-card {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--gap-xs);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+}
+
+.author-card__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-card__name {
+  font: var(--font-body) / 1.25 "sf-medium", sans-serif;
+  letter-spacing: 0.025em;
+}
+
+.author-card__date {
+  color: var(--secondary-600);
+  font: var(--font-label) / 1.65 "sf-regular", sans-serif;
+}
+
+.recipe-title {
+  overflow-wrap: break-word;
+}
+
+.recipe-description {
+  color: var(--secondary-700);
+  line-height: 1.5;
+}
+
+/* Stats bar: value on top, icon and label underneath */
+.recipe-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-stat {
+  display: flex;
+  flex-direction: column-reverse; /* <dt> comes first for screen readers, but shows under the value */
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs);
+  min-height: 90px;
+  padding: var(--gap-xs);
+  text-align: center;
+}
+
+.recipe-stat + .recipe-stat {
+  border-left: 1px solid var(--secondary);
+}
+
+.recipe-stat dt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font: var(--font-label) / 1.5 "sf-bold", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.recipe-stat dt img {
+  width: auto;
+  height: 20px;
+}
+
+.recipe-stat dd {
+  font: var(--font-stat) / 1 "gumbo", sans-serif;
+}
+
+/* Figma "text-container": white box with a big Gumbo heading */
+.recipe-box {
+  padding: var(--gap-xs) var(--gap-sm) var(--gap-sm);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-box__title {
+  font-size: var(--font-header);
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+
+.recipe-box__empty {
+  padding: var(--gap-xs) 20px;
+  color: var(--secondary-600);
+}
+
+.ingredient-list {
+  padding: var(--gap-xs) 20px;
+  border-top: 1px dashed var(--secondary);
+  line-height: 22px;
+  letter-spacing: -0.03em;
+  list-style: none;
+}
+
+.recipe-box--steps .recipe-box__title {
+  border-bottom: 1px dashed var(--secondary);
+}
+
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-base) var(--gap-xs);
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-xxs);
+  line-height: 22px;
+  letter-spacing: -0.03em;
+  cursor: pointer;
+}
+
+/* Figma checkbox, drawn with its two SVG states */
+.step__check {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  appearance: none;
+  background: url("/static/icons/checkbox.svg") center / 20px 20px no-repeat;
+  cursor: pointer;
+}
+.step__check:checked {
+  background-image: url("/static/icons/checkbox_checked.svg");
+}
+.step__check:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.step__check:checked + .step__text {
+  color: var(--secondary-600);
+  text-decoration: line-through;
+}
+
+/* Windows high contrast mode hides background images, so fall back to the normal checkbox */
+@media (forced-colors: active) {
+  .step__check {
+    appearance: auto;
+    background: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .recipe-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--gap-xl);
+  }
+
+  .recipe-body {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    column-gap: var(--gap-xl);
+  }
+}
+
+/* ---------- Login and signup (Figma "Signup") ---------- */
+.auth {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  width: min(100%, 382px);
+  margin-inline: auto;
+  padding-block: var(--gap-lg);
+}
+
+.auth__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.auth__logo {
+  width: 137px;
+  height: auto;
+}
+
+.auth__title {
+  font-size: clamp(2.25rem, 1.9rem + 1.5vw, 2.734rem); /* 43.74px */
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.auth__lead,
+.auth__switch {
+  color: var(--secondary-600);
+  text-align: center;
+}
+
+.auth__switch a {
+  font-family: "sf-bold", sans-serif;
+  text-underline-offset: 3px;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-base);
+}
+
+.auth .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xxs);
+}
+
+.auth .field label {
+  font: 0.875rem / 1.4 "sf-bold", sans-serif;
+}
+
+.auth .field input,
+.auth .field select {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--gap-sm) var(--gap-md);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-sm);
+  color: var(--secondary);
+  font: var(--font-body) / 1.2 "sf-regular", sans-serif;
+}
+
+.auth .field input::placeholder {
+  color: var(--secondary-500);
+}
+
+.auth .primary-btn--block {
+  margin-top: var(--gap-xs);
+}
+
+/*____________________________________________________________
+  CREATE RECIPE
+  Header → numbered cards → fields → stepper → polaroid → rows → submit bar
+____________________________________________________________*/
+
+.create {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* ---------- Header: card with a gingham "picnic cloth" strip ---------- */
+.create-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-base);
+  padding: calc(var(--gap-md) + 20px) var(--gap-md) var(--gap-md);
+  overflow: hidden;
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-hard);
+}
+
+.create-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 20px;
+  border-bottom: 1px solid var(--secondary);
+  background:
+    linear-gradient(90deg, rgb(255 93 17 / 0.35) 50%, transparent 0) 0 0 / 20px 20px,
+    linear-gradient(rgb(255 93 17 / 0.35) 50%, transparent 0) 0 0 / 20px 20px,
+    var(--primary-0);
+}
+
+.create-header__mascot {
+  flex: none;
+  width: 76px;
+  height: auto;
+  transform: rotate(-6deg);
+  animation: wiggle 0.9s ease-in-out;
+}
+
+.create-header:hover .create-header__mascot {
+  animation: wiggle-again 0.9s ease-in-out;
+}
+
+.create-header__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap-xs);
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .create-header {
+    gap: var(--gap-md);
+    padding-inline: var(--gap-lg);
+  }
+
+  .create-header__mascot {
+    width: 120px;
+  }
+}
+
+/* Small yellow label that looks stuck on */
+.sticker {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--alert-color);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-pill);
+  box-shadow: 2px 2px 0 var(--secondary);
+  font: var(--font-label) / 1.5 "sf-bold", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+}
+
+/* ---------- Numbered cards ---------- */
+.recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+}
+
+.form-card {
+  min-width: 0; /* fieldsets are min-content wide by default */
+  margin: 0;
+  padding: var(--gap-md) var(--gap-base);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-hard);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+/* The card you're working in lights up */
+.form-card:focus-within {
+  border-color: var(--accent-900);
+  box-shadow: 6px 6px 0 var(--accent);
+}
+
+.form-card > * + * {
+  margin-top: var(--gap-base);
+}
+
+@media (min-width: 768px) {
+  .form-card {
+    padding: var(--gap-lg);
+  }
+}
+
+/* float + width makes the legend a normal block instead of sitting on the border */
+.form-card__title {
+  float: left;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  width: 100%;
+  padding: 0;
+  font: var(--font-quote) / 1.2 "gumbo", sans-serif;
+}
+
+.form-card__title + * {
+  clear: both;
+}
+
+.form-card__number {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  border: 1px solid var(--secondary);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--secondary);
+  font: 1.5rem / 1 "gumbo", sans-serif;
+  transform: rotate(-8deg);
+}
+
+.form-card:nth-of-type(even) .form-card__number {
+  background: var(--alert-color);
+  transform: rotate(6deg);
+}
+
+.form-card__intro {
+  margin-top: var(--gap-xs);
+  color: var(--secondary-600);
+}
+
+/* ---------- Fields ---------- */
+.recipe-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xxs);
+}
+
+.recipe-form .field > label,
+.stepper-field > label {
+  font: 0.875rem / 1.4 "sf-bold", sans-serif;
+}
+
+.recipe-form .field > input,
+.recipe-form .field > textarea,
+.row-list input,
+.row-list select,
+.row-list textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--gap-sm) var(--gap-base);
+  background: var(--primary);
+  border: 1px solid var(--secondary);
+  border-radius: 10px;
+  color: var(--secondary);
+  font: var(--font-body) / 1.4 "sf-regular", sans-serif;
+  transition: background 0.15s;
+}
+
+.recipe-form textarea {
+  resize: vertical;
+}
+
+.recipe-form .field > :is(input, textarea):focus,
+.row-list :is(input, select, textarea):focus {
+  background: var(--primary-0);
+}
+
+.recipe-form ::placeholder {
+  color: var(--secondary-500);
+}
+
+.field-hint--split {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-base);
+}
+
+/* ---------- Stepper: − 30 min + ---------- */
+.stepper-grid {
+  display: grid;
+  gap: var(--gap-base);
+}
+
+@media (min-width: 600px) {
+  .stepper-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stepper-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-xxs);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+  padding: var(--gap-xxs);
+  background: var(--primary);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-pill);
+}
+
+.stepper__btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--accent-200);
+  border: 1px solid var(--secondary);
+  border-radius: 50%;
+  box-shadow: 0 2px 0 var(--secondary);
+  cursor: pointer;
+}
+
+.stepper__btn:hover {
+  background: var(--accent-300);
+}
+
+.stepper__btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.stepper__value {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--gap-xxs);
+  min-width: 0;
+}
+
+.stepper input {
+  width: 4ch;
+  min-height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--secondary);
+  font: 1.5rem / 1 "gumbo", sans-serif;
+  text-align: center;
+  appearance: textfield;
+}
+
+/* Hide the browser's own tiny arrows; the round buttons replace them */
+.stepper input::-webkit-inner-spin-button,
+.stepper input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.stepper__unit {
+  color: var(--secondary-600);
+  font: 0.875rem / 1 "sf-medium", sans-serif;
+}
+
+/* ---------- Photo: a polaroid you drop the photo onto ---------- */
+.photo-field {
+  align-items: center;
+}
+
+.polaroid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-xs);
+  width: min(100%, 320px);
+  padding: var(--gap-sm) var(--gap-sm) var(--gap-md);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: 6px;
+  box-shadow: var(--shadow-hard);
+  text-align: center;
+  cursor: pointer;
+  transform: rotate(-2deg);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.polaroid:hover,
+.polaroid.is-dragover {
+  box-shadow: 6px 6px 0 var(--secondary);
+  transform: rotate(0deg) scale(1.02);
+}
+
+.polaroid.is-dragover {
+  background: var(--accent-50);
+  border-style: dashed;
+}
+
+.photo-field input:focus-visible + .polaroid {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.polaroid__photo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--accent-50);
+  border: 1px dashed var(--secondary-400);
+  border-radius: 4px;
+}
+
+.polaroid.has-photo .polaroid__photo {
+  border-style: solid;
+}
+
+.polaroid__placeholder {
+  width: 45%;
+  height: auto;
+}
+
+.polaroid.has-photo .polaroid__placeholder {
+  display: none;
+}
+
+.polaroid__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.polaroid__caption {
+  font: 1.25rem / 1.2 "gumbo", sans-serif;
+}
+
+.polaroid__link {
+  color: var(--accent-900);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.polaroid__hint {
+  color: var(--secondary-600);
+  font-size: var(--font-label);
+}
+
+/* ---------- Ingredient and step rows ---------- */
+.row-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm);
+  list-style: none;
+}
+
+.row-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: 50%;
+  color: var(--secondary);
+  font: 1.125rem / 1 "sf-bold", sans-serif;
+  cursor: pointer;
+}
+
+.row-btn:hover {
+  background: var(--accent-100);
+}
+
+.row-btn--remove:hover {
+  background: var(--error-100);
+}
+
+/* Ingredient: name on its own line on phones, everything on one line from 600px */
+.ingredient-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+  gap: var(--gap-xs);
+  padding: var(--gap-xs);
+  background: var(--primary);
+  border: 1px dashed var(--secondary-400);
+  border-radius: 12px;
+}
+
+.ingredient-entry__name {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 600px) {
+  .ingredient-entry {
+    grid-template-columns: minmax(0, 1fr) 6rem 7.5rem 44px;
+  }
+
+  .ingredient-entry__name {
+    grid-column: auto;
+  }
+}
+
+/* Step: big number, text, and the drag handle + buttons underneath */
+.row-list--steps {
+  counter-reset: step;
+}
+
+.step-entry {
+  display: grid;
+  grid-template-areas:
+    "number text"
+    "handle actions";
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--gap-xs) var(--gap-sm);
+  padding: var(--gap-xs);
+  background: var(--primary);
+  border: 1px dashed var(--secondary-400);
+  border-radius: 12px;
+  counter-increment: step;
+}
+
+.step-entry::before {
+  content: counter(step);
+  grid-area: number;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  border: 1px solid var(--secondary);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--secondary);
+  font: 1.5rem / 1 "gumbo", sans-serif;
+}
+
+.step-entry__handle {
+  grid-area: handle;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  cursor: grab;
+}
+
+.step-entry__text {
+  grid-area: text;
+}
+
+.step-entry__actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap-xs);
+}
+
+.step-entry.is-dragging {
+  border-style: solid;
+  border-color: var(--accent-900);
+  opacity: 0.5;
+}
+
+/* "Add ingredient" / "Add step": a dashed ticket that wiggles a little */
+.add-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-xs);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--gap-xs) var(--gap-base);
+  background: transparent;
+  border: 2px dashed var(--secondary);
+  border-radius: 12px;
+  color: var(--secondary);
+  font: var(--font-body) / 1.4 "sf-bold", sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.add-row-btn:hover {
+  background: var(--accent-50);
+  transform: rotate(-1deg);
+}
+
+.add-row-btn img {
+  transition: transform 0.3s;
+}
+
+.add-row-btn:hover img {
+  transform: rotate(90deg);
+}
+
+/* ---------- Submit bar: sticks above the tab bar while you scroll ---------- */
+.form-submit {
+  position: sticky;
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--gap-xs));
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-base);
+  padding: var(--gap-xs) var(--gap-xs) var(--gap-xs) var(--gap-md);
+  background: var(--primary-0);
+  border: 1px solid var(--secondary);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-hard);
+}
+
+.form-submit__note {
+  color: var(--secondary-600);
+  font-size: var(--font-small);
+}
+
+.form-submit__btn {
+  flex: none;
+  padding-inline: var(--gap-md);
+}
+
+@media (min-width: 768px) {
+  .form-submit {
+    bottom: var(--gap-base);
+  }
+}
+
+/* ---------- Motion ---------- */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-4deg); }
+  75% { transform: rotate(2deg); }
+}
+
+/* Same animation under a new name, so it can play again on hover */
+@keyframes wiggle-again {
+  0%, 100% { transform: rotate(-6deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-4deg); }
+  75% { transform: rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .create *,
+  .create *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

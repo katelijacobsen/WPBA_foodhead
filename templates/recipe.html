@@ -1,15 +1,21 @@
 {% extends 'base.html' %} {% block content%}
 
 <article class="recipe-page">
-
+  
   <img
-    class="recipe-hero"
-    src="/static/uploads/{{ recipe['recipe_img_key'] }}"
-    alt="{{ recipe['recipe_title'] }}"
+  class="recipe-hero"
+  src="/static/uploads/{{ recipe['recipe_img_key'] }}"
+  alt="{{ recipe['recipe_title'] }}"
   />
-
-  <h1 class="recipe-title">{{ recipe['recipe_title'] }}</h1>
-
+  <!--User who posted the recipe-->
+  <section class="recipe_owner">
+    <!--Button to add it for its own personal collection-->
+    <button class="save_recipe"> add </button>
+    <img alt="" src=""/>
+    <h1 class="recipe-title">{{ recipe['recipe_title'] }}</h1>
+  </section>
+  <!--Optional description for the user to read about the recipe-->
+  <section class="recipe_description">
   <h2>Description</h2>
   <p class="recipe-description">{{ recipe['recipe_description'] }}</p>
 
@@ -23,7 +29,29 @@
     </li>
     {% endfor %}
   </ul>
-
+</section>
+<!--Overview about the recipe-->
+<section class="recipe_practical_info">
+  <ol>
+    <li>
+      <h3>info</h3>
+      <img alt="" src=""/>
+      <p>icon-tag</p>
+    </li>
+    <li>
+      <h3>info</h3>
+      <img alt="" src=""/>
+      <p>icon-tag</p>
+    </li>
+    <li>
+      <h3>info</h3>
+      <img alt="" src=""/>
+      <p>icon-tag</p>
+    </li>
+  </ol>
+</section>
+<!--Section of the recipe to follow the instructions-->
+<section>
   <h2>Instructions</h2>
   <ol class="instructions-list">
     {% for step in instructions %}
@@ -36,6 +64,7 @@
     Change Recipe
   </a>
   {% endif %}
+</section>
 
 </article>
 

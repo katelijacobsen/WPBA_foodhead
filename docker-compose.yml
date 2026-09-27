@@ -16,7 +16,7 @@ services:
     container_name: x_mariadb
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: x
+      MYSQL_DATABASE: foodhead
     volumes:
       - mariadb_data:/var/lib/mysql
     ports:

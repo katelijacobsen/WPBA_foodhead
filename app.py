@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, jsonify, g, session, redirect, url_for
+from flask import Flask, flash, render_template, request, jsonify, g, session, redirect, url_for, abort
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 from icecream import ic
@@ -6,6 +6,8 @@ from icecream import ic
 import config
 import uuid
 import time
+import re
+import os
 
 UPLOAD_FOLDER = './static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -35,6 +37,47 @@ def load_user():
         db.close()
     else:
         g.user = None
+########################QUERIES#########################
+def get_recipe(cursor, recipe_id):
+    cursor.execute(""" 
+        SELECT
+            recipes.recipe_id,
+            recipes.user_id,
+            recipes.recipe_title,
+            recipes.recipe_description,
+            recipes.recipe_img_key,
+            recipes.recipe_servings,
+            recipes.recipe_prep_time,
+            recipes.recipe_cook_time,
+            recipes.recipe_created_at,
+            users.user_username
+        FROM recipes
+        LEFT JOIN users ON users.user_id = recipes.user_id
+        WHERE recipes.recipe_id = %s
+                   """, (recipe_id))
+    return cursor.fetchone()
+
+def get_recipe_ingridients(cursor, recipe_id):
+    cursor.execute("""
+        SELECT
+            ingridient_names,
+            ingridient_amounts,
+            ingridient_units
+        FROM ingridients
+        WHERE recipe_fk = %s
+    """, (recipe_id))
+    return cursor.fetchall()
+
+def get_recipe_instructions(cursor, recipe_id):
+    cursor.execute("""
+        SELECT 
+            instruction,
+            instruction_step_number
+        FROM instructions
+        WHERE recipe_fk = %s
+        ORDER BY instruction_step_number ASC
+        """, (recipe_id))
+    return cursor.fetchall()
 
 ########################ROUTING#########################
 ### INDEX ###
@@ -92,25 +135,29 @@ def create_post():
 def view_recipe(recipe_id):
     try:#Get to the db
         db, cursor = config.db()
-
-        #execute & fetch one by getting the recipe and its ingridients & instructions
-        cursor.execute("SELECT * FROM recipes WHERE recipe_id = %s", (recipe_id,))
-        recipe = cursor.fetchone()
-
-        cursor.execute("SELECT * FROM ingridients WHERE recipe_fk = %s", (recipe_id,))
-        ingridients = cursor.fetchall()
-
-        cursor.execute("SELECT * FROM instructions WHERE recipe_fk = %s", (recipe_id,))
-        instructions = cursor.fetchall()
+        recipe = get_recipe(cursor, recipe_id)
+        ingridients = get_recipe_ingridients(cursor, recipe_id)
+        instructions = get_recipe_instructions(cursor, recipe_id)
 
     except Exception as ex:
         ic(ex)
-    
+        abort(500)
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+    # In case that 500 is kept outside the try
+    if not recipe:
+        os.abort(404)
     
-    return render_template("recipe.html", recipe=recipe, ingridients=ingridients, instructions=instructions)        
+    #Owner of the recipe with global import
+    recipe_owner = g.user is not None and g.user["user_id"] == recipe["user_id"]
+    
+    return render_template(
+        "recipe.html",
+        recipe=recipe,
+        ingridients=ingridients,
+        instructions=instructions,
+        recipe_owner = recipe_owner)        
 
 ### SITE FOR EDITING RECIPE 
 @app.route('/recipe/<recipe_id>/edit')
@@ -120,6 +167,8 @@ def edit_recipe(recipe_id):
         cursor, db = db.config()
     except Exception as ex:
         ic(ex)
+        os.abort(500)
+        return "didn't work, eh?"
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()

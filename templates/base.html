@@ -34,7 +34,7 @@
           </li>
           <li class="nav-auth-group">
             <span>{{ g.user['user_username']}}</span>
-            <a class="logout-btn" href="logout">
+            <a class="logout-btn" href="{{ url_for('logout') }}">
               Logout
               <img alt="login-icon" src="/static/icons/logout_icon.svg" />
             </a>
@@ -52,10 +52,10 @@
             </a>
           </li>
           <li class="nav-auth-group">
-            <a class="primary-btn" href="login">
+            <a class="primary-btn" href="{{ url_for('login') }}">
               Login <img alt="login-icon" src="/static/icons/login_icon.svg" />
             </a>
-            <a class="secondary-btn" href="signup">Sign up</a>
+            <a class="secondary-btn" href="{{ url_for('signup_post') }}">Sign up</a>
           </li>
         </ul>
         {% endif %}

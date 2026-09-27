@@ -1,71 +1,72 @@
-{% extends 'base.html' %} {% block content%}
+{% extends 'base.html' %}
+{% from 'macros.html' import recipe_overview %}
 
-<article class="recipe-page">
-  
+{% block title %}{{ recipe.recipe_title }} Foodhead {% endblock title %}
+
+{% block content %}
+<article class="recipe-page" aria-labelledby="recipe-title">
+
+  {% if recipe.recipe_img_key %}
+  {# alt="" because the <h1> right after already names the dish; see the note below #}
   <img
-  class="recipe-hero"
-  src="/static/uploads/{{ recipe['recipe_img_key'] }}"
-  alt="{{ recipe['recipe_title'] }}"
+    class="recipe-hero"
+    src="{{ url_for('static', filename='uploads/' ~ recipe.recipe_img_key) }}"
+    alt=""
   />
-  <!--User who posted the recipe-->
-  <section class="recipe_owner">
-    <!--Button to add it for its own personal collection-->
-    <button class="save_recipe"> add </button>
-    <img alt="" src=""/>
-    <h1 class="recipe-title">{{ recipe['recipe_title'] }}</h1>
+  {% endif %}
+
+  <header class="recipe-header">
+    <h1 id="recipe-title" class="recipe-title">{{ recipe.recipe_title }}</h1>
+    {% if recipe.user_username %}
+    <p class="recipe-owner">By {{ recipe.user_username }}</p>
+    {% endif %}
+  </header>
+
+  <section aria-labelledby="overview-heading">
+    <h2 id="overview-heading" class="visually-hidden">Overview</h2>
+    {{ recipe_overview(recipe) }}
   </section>
-  <!--Optional description for the user to read about the recipe-->
-  <section class="recipe_description">
-  <h2>Description</h2>
-  <p class="recipe-description">{{ recipe['recipe_description'] }}</p>
 
-  <h2>Ingredients</h2>
-  <ul class="ingredients-list">
-    {% for ingredient in ingridients %}
-    <li class="ingredient-row">
-      <span class="ingredient-amount">{{ ingredient['ingridient_amounts'] }}</span>
-      <span class="ingredient-unit">{{ ingredient['ingridient_units'] }}</span>
-      <span class="ingredient-name">{{ ingredient['ingridient_names'] }}</span>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-<!--Overview about the recipe-->
-<section class="recipe_practical_info">
-  <ol>
-    <li>
-      <h3>info</h3>
-      <img alt="" src=""/>
-      <p>icon-tag</p>
-    </li>
-    <li>
-      <h3>info</h3>
-      <img alt="" src=""/>
-      <p>icon-tag</p>
-    </li>
-    <li>
-      <h3>info</h3>
-      <img alt="" src=""/>
-      <p>icon-tag</p>
-    </li>
-  </ol>
-</section>
-<!--Section of the recipe to follow the instructions-->
-<section>
-  <h2>Instructions</h2>
-  <ol class="instructions-list">
-    {% for step in instructions %}
-    <li><span>{{ step['step_instructions'] }}</span></li>
-    {% endfor %}
-  </ol>
+  <section aria-labelledby="description-heading">
+    <h2 id="description-heading">Description</h2>
+    <p class="recipe-description">{{ recipe.recipe_description }}</p>
+  </section>
 
-  {% if g.user and g.user['user_id'] == recipe['user_id'] %}
-  <a class="primary-btn" href="/recipe/{{ recipe['recipe_id'] }}/edit">
-    Change Recipe
+  <section aria-labelledby="ingredients-heading">
+    <h2 id="ingredients-heading">Ingredients</h2>
+    {% if ingridients %}
+    <ul class="ingredients-list" role="list">
+      {% for ingridient in ingridients %}
+      <li class="ingredient-row">
+        <span class="ingredient-amount">{{ ingridient.ingridient_amounts }}</span>
+        <span class="ingredient-unit">{{ ingridient.ingridient_units }}</span>
+        <span class="ingredient-name">{{ ingridient.ingridient_names }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No ingredients have been added yet.</p>
+    {% endif %}
+  </section>
+
+  <section aria-labelledby="instructions-heading">
+    <h2 id="instructions-heading">Instructions</h2>
+    {% if instructions %}
+    <ol class="instructions-list" role="list">
+      {% for step in instructions %}
+      <li><span>{{ step.instruction }}</span></li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p>No instructions have been added yet.</p>
+    {% endif %}
+  </section>
+
+  {% if is_owner %}
+  <a class="primary-btn" href="{{ url_for('edit_recipe', recipe_id=recipe.recipe_id) }}">
+    Edit recipe
   </a>
   {% endif %}
-</section>
 
 </article>
-
 {% endblock content %}

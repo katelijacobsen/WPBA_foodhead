@@ -54,7 +54,7 @@ def get_recipe(cursor, recipe_id):
         FROM recipes
         LEFT JOIN users ON users.user_id = recipes.user_id
         WHERE recipes.recipe_id = %s
-                   """, (recipe_id))
+                   """, (recipe_id,))
     return cursor.fetchone()
 
 def get_recipe_ingridients(cursor, recipe_id):
@@ -65,7 +65,7 @@ def get_recipe_ingridients(cursor, recipe_id):
             ingridient_units
         FROM ingridients
         WHERE recipe_fk = %s
-    """, (recipe_id))
+    """, (recipe_id,))
     return cursor.fetchall()
 
 def get_recipe_instructions(cursor, recipe_id):
@@ -76,7 +76,7 @@ def get_recipe_instructions(cursor, recipe_id):
         FROM instructions
         WHERE recipe_fk = %s
         ORDER BY instruction_step_number ASC
-        """, (recipe_id))
+        """, (recipe_id,))
     return cursor.fetchall()
 
 ########################ROUTING#########################
@@ -147,7 +147,7 @@ def view_recipe(recipe_id):
         if "db" in locals(): db.close()
     # In case that 500 is kept outside the try
     if not recipe:
-        os.abort(404)
+        abort(404)
     
     #Owner of the recipe with global import
     recipe_owner = g.user is not None and g.user["user_id"] == recipe["user_id"]

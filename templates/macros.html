@@ -1,0 +1,33 @@
+<!-- Practical recipe overview -->
+
+{% macro overview(label, icon) %}
+<div class="recipe-overview">
+    <dt>
+        <img src="{{ url_for('static', filename='icons/' ~ icon)}}"
+        alt=""
+        aria-hidden="true"
+        width="20"
+        height="20"/>
+        {{ label }}
+    </dt>
+    <dd>{{ caller() }}</dd>
+</div>
+{% endmacro %}
+
+{% macro recipe_overview(recipe)%}
+<dl class="recipe-overviews">
+    <!--Prep time-->
+    {% call overview("Prep time", "clock-icon.svg") %}
+    <time>{{ recipe.recipe_prep_time}} min</time>
+    {% endcall %}
+
+    <!--Cooking time-->
+    {% call overview("Cook time", "chef-hat-icon.svg") %}
+    <time>{{ recipe.recipe_cook_time}} min</time>
+    {% endcall %}
+    
+    <!--Servings-->
+    {% call overview("Prep time", "servings-icon.svg") %}
+    {{recipe.recipe_servings}}
+    {% endcall %}
+</dl>

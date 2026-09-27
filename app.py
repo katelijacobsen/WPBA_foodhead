@@ -132,6 +132,7 @@ def create_post():
 
 ### SINGLE SITE RECIPE ###
 @app.route("/recipe/<recipe_id>")
+@config.no_cache
 def view_recipe(recipe_id):
     try:#Get to the db
         db, cursor = config.db()

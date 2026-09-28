@@ -1,0 +1,275 @@
+{% from 'macros.html' import field, stepper, ingridient_row, instruction_row %} 
+{% set editing = recipe is defined and recipe %}
+
+  <div class="create">
+    <header class="create-header">
+      <img
+        class="create-header__mascot"
+        src="{{ url_for('static', filename='imgs/foodhead-logo.png') }}"
+        alt=""
+        width="252"
+        height="273"
+      />
+      <div class="create-header__text">
+        {% if editing %}
+        <p class="sticker">Editing</p>
+        <h1 id="recipe-form-heading">Tweak the recipe</h1>
+        <p class="page-lead">
+          Changes to “{{ recipe.recipe_title }}” show up for everyone as soon as
+          you save.
+        </p>
+        {% else %}
+        <p class="sticker">New recipe</p>
+        <h1 id="recipe-form-heading">What's cooking?</h1>
+        <p class="page-lead">
+          Share your recipe with the other foodheads. It only takes five small
+          steps.
+        </p>
+        {% endif %}
+      </div>
+    </header>
+
+    <form
+      class="recipe-form"
+      {%
+      if
+      editing
+      %}mix-patch="{{ url_for('api_update_recipe', recipe_id=recipe.recipe_id) }}"
+      {%
+      else
+      %}mix-post="{{ url_for('api_create_recipe') }}"
+      {%
+      endif
+      %}
+      enctype="multipart/form-data"
+      novalidate
+      aria-labelledby="recipe-form-heading"
+    >
+      <!-- STEP 1-->
+      <fieldset class="form-card">
+        <legend class="form-card__title">
+          <span class="form-card__number" aria-hidden="true">1</span>The basics
+        </legend>
+        <p class="form-card__intro">Give it a name people will crave.</p>
+
+        {{ field("recipe_title", "Title", value=recipe.recipe_title if editing
+        else none, hint=rules.RECIPE_TITLE_MIN ~ "–" ~ rules.RECIPE_TITLE_MAX ~
+        " characters", validate=rules.REGEX_RECIPE_TITLE,
+        maxlength=rules.RECIPE_TITLE_MAX, placeholder="Grandma's lasagna") }} {%
+        set description = recipe.recipe_description if editing else "" %}
+        <div class="field">
+          <label for="recipe_description">Description</label>
+          <textarea
+            id="recipe_description"
+            name="recipe_description"
+            rows="4"
+            required
+            minlength="{{ rules.RECIPE_DESCRIPTION_MIN }}"
+            maxlength="{{ rules.RECIPE_DESCRIPTION_MAX }}"
+            placeholder="What makes this dish special?"
+            data-counter="recipe_description-count"
+            aria-describedby="recipe_description-hint recipe_description-error"
+          >
+{{ description }}</textarea
+          >
+          <p id="recipe_description-hint" class="field-hint field-hint--split">
+            <span>At least {{ rules.RECIPE_DESCRIPTION_MIN }} characters</span>
+            <span
+              ><span id="recipe_description-count"
+                >{{ description | length }}</span
+              >
+              / {{ rules.RECIPE_DESCRIPTION_MAX }}</span
+            >
+          </p>
+          <p id="recipe_description-error" class="field-error"></p>
+        </div>
+      </fieldset>
+
+      
+      <!-- STEP 2-->
+      <fieldset class="form-card">
+        <legend class="form-card__title">
+          <span class="form-card__number" aria-hidden="true">2</span>Time &amp;
+          servings
+        </legend>
+        <p class="form-card__intro">
+          How long does it take, and how many does it feed?
+        </p>
+
+        <div class="stepper-grid">
+          {{ stepper("recipe_prep_time", "Prep time", recipe.recipe_prep_time if
+          editing else 15, rules.RECIPE_MINUTES_MIN, rules.RECIPE_MINUTES_MAX,
+          step=5, unit="min", hint="Minutes") }} {{ stepper("recipe_cook_time",
+          "Cook time", recipe.recipe_cook_time if editing else 30,
+          rules.RECIPE_MINUTES_MIN, rules.RECIPE_MINUTES_MAX, step=5,
+          unit="min", hint="Minutes") }} {{ stepper("recipe_servings",
+          "Servings", recipe.recipe_servings if editing else 2,
+          rules.RECIPE_SERVINGS_MIN, rules.RECIPE_SERVINGS_MAX,
+          hint=rules.RECIPE_SERVINGS_MIN ~ "–" ~ rules.RECIPE_SERVINGS_MAX ~ "
+          people") }}
+        </div>
+      </fieldset>
+      <!-- STEP 3-->
+      {% set current_img = recipe.recipe_img_key if editing else "" %}
+      <fieldset class="form-card">
+        <legend class="form-card__title">
+          <span class="form-card__number" aria-hidden="true">3</span>Say cheese
+        </legend>
+        <p class="form-card__intro">
+          {% if editing %}Keep the photo you have, or drop a new one to replace
+          it. {% else %}A photo of the finished dish makes people hungry.{%
+          endif %}
+        </p>
+
+        <div class="field photo-field">
+          {# The real input stays focusable (visually hidden, not display:none).
+          The label is the drop zone #}
+          <input
+            id="recipe_img"
+            name="recipe_file"
+            type="file"
+            class="visually-hidden"
+            {%
+            if
+            not
+            editing
+            %}required{%
+            endif
+            %}
+            accept="image/png, image/jpeg, image/webp"
+            data-preview="recipe_img-preview"
+            aria-describedby="recipe_img-name recipe_img-error"
+          />
+          <label
+            for="recipe_img"
+            class="polaroid{% if current_img %} has-photo{% endif %}"
+          >
+            <span class="polaroid__photo">
+              {% if current_img %}
+              <img
+                id="recipe_img-preview"
+                class="polaroid__preview"
+                alt=""
+                src="{{ url_for('static', filename='uploads/' ~ current_img) }}"
+              />
+              {% else %}
+              <img
+                id="recipe_img-preview"
+                class="polaroid__preview"
+                alt=""
+                hidden
+              />
+              {% endif %}
+              <img
+                class="polaroid__placeholder"
+                src="{{ url_for('static', filename='imgs/upload-img.png') }}"
+                alt=""
+                width="200"
+                height="200"
+              />
+            </span>
+            <span class="polaroid__caption">
+              Drop a new photo or <span class="polaroid__link">browse</span>
+            </span>
+          </label>
+          <p id="recipe_img-name" class="field-hint" aria-live="polite"></p>
+          <p id="recipe_img-error" class="field-error"></p>
+        </div>
+      </fieldset>
+
+      <!-- STEP 4-->
+      <fieldset class="form-card" aria-describedby="ingridients-error">
+        <legend class="form-card__title">
+          <span class="form-card__number" aria-hidden="true">4</span>Ingredients
+        </legend>
+        <p class="form-card__intro">
+          One ingredient per row. Leave the unit empty for things like “2 eggs”.
+        </p>
+
+        <ul id="ingridients" class="row-list" role="list">
+          {% for ingridient in (ingridients if editing and ingridients else
+          [none]) %} {{ ingridient_row(ingridient) }} {% endfor %}
+        </ul>
+        <p id="ingridients-error" class="field-error"></p>
+        <button
+          type="button"
+          class="add-row-btn"
+          data-list="ingridients"
+          data-template="ingridient-template"
+          onclick="addRow(this)"
+        >
+          <img
+            src="{{ url_for('static', filename='icons/add_icon.svg') }}"
+            alt=""
+            width="24"
+            height="24"
+          />
+          Add ingredient
+        </button>
+        <template id="ingridient-template">{{ ingridient_row() }}</template>
+      </fieldset>
+
+      <!-- STEP 5-->
+      <fieldset class="form-card" aria-describedby="instructions-error">
+        <legend class="form-card__title">
+          <span class="form-card__number" aria-hidden="true">5</span>Steps
+        </legend>
+        <p class="form-card__intro">
+          Drag a step, or use the arrows, to change the order.
+        </p>
+
+        <ol id="instructions" class="row-list row-list--steps" role="list">
+          {% for step in (instructions if editing and instructions else [none])
+          %} {{ instruction_row(step) }} {% endfor %}
+        </ol>
+        <p id="instructions-error" class="field-error"></p>
+        <button
+          type="button"
+          class="add-row-btn"
+          data-list="instructions"
+          data-template="instruction-template"
+          onclick="addRow(this)"
+        >
+          <img
+            src="{{ url_for('static', filename='icons/add_icon.svg') }}"
+            alt=""
+            width="24"
+            height="24"
+          />
+          Add step
+        </button>
+        <template id="instruction-template">{{ instruction_row() }}</template>
+      </fieldset>
+
+      {% if editing %}
+      <div class="form-submit form-submit--edit">
+        <a
+          class="secondary-btn"
+          href="{{ url_for('view_recipe', recipe_id=recipe.recipe_id) }}"
+          >Cancel</a
+        >
+        <button
+          class="primary-btn form-submit__btn"
+          mix-await="Saving…"
+          mix-done="Save changes"
+        >
+          Save changes
+        </button>
+      </div>
+      {% else %}
+      <div class="form-submit">
+        <p class="form-submit__note">
+          You can edit your recipe after sharing it.
+        </p>
+        <button
+          class="primary-btn form-submit__btn"
+          mix-await="Sharing…"
+          mix-done="Share recipe"
+        >
+          Share recipe
+        </button>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</id>

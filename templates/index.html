@@ -15,14 +15,14 @@
   <section class="section" aria-labelledby="recipes-heading">
     <h2 id="recipes-heading" class="section-title">Recipe ideas</h2>
     {% if recipes %}
-    {# Swipeable row on phones, grid from 768px #}
-    <ul class="card-carousel" role="list">
+    {# Two columns on phones, as many as fit on bigger screens #}
+    <ul class="card-grid" role="list">
       {% for recipe in recipes %}
       <li>{{ recipe_card(recipe) }}</li>
       {% endfor %}
     </ul>
     {% else %}
-    <p>No recipes yet. <a href="{{ url_for('create_page') }}">Share the first one</a>.</p>
+    <p class="empty-state">No recipes yet. <a href="{{ url_for('create_page') }}">Share the first one</a>.</p>
     {% endif %}
   </section>
 </div>

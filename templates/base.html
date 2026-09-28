@@ -18,10 +18,10 @@
         <img src="{{ url_for('static', filename='imgs/foodhead-logo.png') }}"
              alt="Foodhead, go to the front page" width="252" height="273" />
       </a>
-      {# Bottom tab bar on phones, top navigation from 768px #}
+      {# Bottom tab bar on phones, sticky top navigation from 768px #}
       <nav class="site-nav" aria-label="Main">
         <ul role="list">
-          {{ nav_link("index", "Home", "home_icon.svg", 16, 18) }}
+          {{ nav_link("index", "Home", "home_icon.svg") }}
           {% if g.user %}
             {{ nav_link("create_page", "Create", "add_icon.svg") }}
             {{ nav_link("logout", "Log out", "logout_icon.svg", 18, 18) }}
@@ -44,13 +44,15 @@
     </div>
     <p id="announcer" class="visually-hidden" aria-live="polite"></p>
 
-    <footer>
-      <a href="{{ url_for('index') }}">
-        <img class="logo" alt="Foodhead, go to the front page"
+    <footer class="site-footer">
+      <a class="site-footer__logo" href="{{ url_for('index') }}">
+        <img alt="Foodhead, go to the front page"
              src="{{ url_for('static', filename='imgs/spicy-foodhead.png') }}" width="212" height="212" />
       </a>
-      <p>Made by <strong>Katja M.</strong></p>
-      <p>Web Development · 1st Semester · Erhvervsakademi København 2026</p>
+      <div class="site-footer__text">
+        <p>Made by <strong>Katja M.</strong></p>
+        <p>Web Development · 1st Semester · Erhvervsakademi København 2026</p>
+      </div>
     </footer>
     <script src="{{ url_for('static', filename='mixhtml.js') }}"></script>
   </body>
